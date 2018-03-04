@@ -1,0 +1,2 @@
+export const CHECKIN_INCOMPLETE = 'INCOMPLETE';
+export const CHECKIN_COMPLETE = 'COMPLETE';
