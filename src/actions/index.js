@@ -124,6 +124,7 @@ export const getRoutes = (user) => {
           && item.val().assignment.assignee
           && item.val().assignment.assignee === user.key) {
           routes[item.key] = {
+            name: item.key,
             businesses: item.val().businesses,
             assignment: item.val().assignment,
             time_created: item.val().time_created,
@@ -131,6 +132,95 @@ export const getRoutes = (user) => {
         }
       });
       dispatch(getRoutesSuccess(routes));
+    });
+  }
+}
+
+const addBusinessToRouteSuccess = (routeName, businessName) => {
+  return {
+    type: Types.ADD_BUSINESS,
+    routeName: routeName,
+    businessName: businessName
+  }
+}
+
+const updateRouteInSession = (businesses) => {
+  return {
+    type: Types.ADD_BUSINESS_TO_ROUTE,
+    businesses,
+  }
+}
+
+export const addBusinessToRoute = (user, businessName) => {
+  return (dispatch) => {
+    if (!businessName || _.isEmpty(user)) {
+      throw new Error(`Must provide business to add ${businessName} ${user.email}`);
+    }
+
+    firebase.database().ref('sessions').once('value', snapshot => {
+      if (!snapshot.exists()) {
+        throw new Error('Could not find session for user');
+      }
+
+      snapshot.forEach(item => {
+        if (item.val().email === user.email && item.val().isLoggedIn) {
+          if (!item.val().route) {
+            firebase.database().ref('sessions/' + item.key).update({
+              route: {
+                businesses: {
+                  [businessName]: true
+                }
+              }
+            });
+            dispatch(updateRouteInSession({ businesses: [businessName] }));
+          } else {
+            const newBusinesses = _.cloneDeep(item.val().route.businesses);
+            newBusinesses[`${businessName}`] = true;
+            console.log('adding new business');
+            console.log(newBusinesses);
+            firebase.database().ref('sessions/' + item.key + '/route').update({
+              businesses: newBusinesses
+            });
+            dispatch(updateRouteInSession(newBusinesses));
+            return;
+          }
+        }
+      });
+    });
+  }
+}
+
+export const removeBusinessFromRoute = (user, businessName) => {
+  return (dispatch) => {
+    if (!businessName || _.isEmpty(user)) {
+      throw new Error(`Must provide business to add ${businessName} ${user.email}`);
+    }
+
+    firebase.database().ref('sessions').once('value', snapshot => {
+      if (!snapshot.exists()) {
+        throw new Error('Could not find session for user');
+      }
+
+      snapshot.forEach(item => {
+        if (item.val().email === user.email && item.val().isLoggedIn) {
+          if (!item.val().route) {
+            throw new Error(`Route does not exist in`);
+          } else {
+            const businesses = item.val().route.businesses;
+            if (!businesses || !businesses[businessName]) {
+              throw new Error(`${businessName} does not exist`);
+            }
+            delete businesses[businessName]
+            console.log('-new business list-');
+            console.log(businesses);
+            firebase.database().ref('sessions/' + item.key + '/route').update({
+              businesses: businesses
+            });
+            dispatch(updateRouteInSession(businesses));
+            return;
+          }
+        }
+      });
     });
   }
 }
@@ -275,9 +365,9 @@ export const saveOrder = (checkinKey, order, itemmaster) => {
       if (checkin) {
         checkin['order'] = order;
         Object.keys(itemmaster).forEach(key => {
-            firebase.database().ref('itemmaster/' + key).update({
-              quantity: itemmaster[key].quantity
-            });
+          firebase.database().ref('itemmaster/' + key).update({
+            quantity: itemmaster[key].quantity
+          });
         });
 
         console.log('updated itemmaster');
@@ -330,29 +420,39 @@ export const isLogin = (isLogin) => {
 
 export const login = () => {
   return (dispatch) => {
+
     dispatch(isLogin(true));
-    firebase.auth().onAuthStateChanged(user => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+
+      console.log('***** onAuthStateChanged ******');
+      console.log(user.email);
       if (user) {
         firebase.database().ref('users').once('value', snapshot => {
+          console.log('firebase returned results for users');
           let found = false;
           snapshot.forEach(item => {
             if (item.val().email === user.email) {
               found = true;
-
-              dispatch(loginSuccess({
-                key: item.key,
-                isLogin: false,
-                firstname: item.val().firstname,
-                lastname: item.val().lastname,
-                email: item.val().email,
-                createdAt: item.val().createdAt,
-              }));
+              console.log('-found user -');
+              console.log(item.val());  
+              createSession(user.email, () => {
+                dispatch(loginSuccess({
+                  key: item.key,
+                  isLogin: false,
+                  firstname: item.val().firstname,
+                  lastname: item.val().lastname,
+                  email: item.val().email,
+                  createdAt: item.val().createdAt,
+                }));
+              });
+              unsubscribe();
+              return;
             }
           });
+
           if (!found) {
             dispatch(loginFailure({
               email: undefined,
-              // isLogin: false,
               createdAt: undefined,
               firstname: undefined,
               lastname: undefined,
@@ -361,18 +461,95 @@ export const login = () => {
           }
         });
       }
+      unsubscribe();
     });
     _facebook_login();
   }
 }
 
-export const logout = () => {
+const getSessionSuccess = (session) => {
+  return {
+    type: Types.GET_SESSION_SUCCESS,
+    session
+  }
+}
+
+export const getSession = (user) => {
+  return dispatch => {
+    console.log('get session called');
+    firebase.database().ref('sessions').on('value', snapshot => {
+      if (!snapshot.exists()) {
+        throw new Error('Session does not exist');
+      }
+
+      snapshot.forEach(item => {
+        if (item.val().email === user.email && item.val().isLoggedIn) {
+          console.log('found user');
+          console.log(item.val());
+          dispatch(getSessionSuccess(item.val()));
+          return;
+        }
+      });
+    });
+  }
+}
+
+const createSession = (email, callback) => {
+  firebase.database().ref('sessions').once('value', snapshot => {
+    if (!snapshot.exists()) {
+      firebase.database().ref('sessions').push().set({
+        email: email,
+        isLoggedIn: true,
+        loginTime: new Date().getTime(),
+      });
+    } else {
+      let existingSession = false;
+      console.log('existing session ' + existingSession);
+      snapshot.forEach(item => {
+        console.log(item.val());
+        if (item.val().email === email && item.val().isLoggedIn) {
+          if (callback) {
+            callback();
+          }
+          existingSession = true;
+          return;
+        }
+      });
+
+      if (!existingSession) {
+        firebase.database().ref('sessions').push().set({
+          email: email,
+          isLoggedIn: true,
+          loginTime: new Date().getTime(),
+        });
+
+        if (callback) {
+          callback();
+        }
+      }
+    }
+  });
+}
+
+export const logout = (user) => {
   return (dispatch) => {
-    firebase.auth().signOut().then(function () {
-      dispatch(SIGN_OUT);
-    }).catch(function (err) {
-      console.error(`Error signing out ${JSON.stringify(err)}`);
-    })
+    firebase.database().ref('sessions').once('value', snapshot => {
+      snapshot.forEach(item => {
+        if (item.val().email === user.email && item.val().isLoggedIn) {
+          firebase.database().ref('sessions/' + item.key).update({
+            isLoggedIn: false,
+            logoutTime: new Date().getTime()
+          });
+        }
+        return;
+      });
+
+      firebase.auth().signOut().then(function() {
+        dispatch(signOut());
+      }).catch(function (err) {
+        console.error(`Error signing out ${JSON.stringify(err)}`);
+      });
+    });
   }
 }
 

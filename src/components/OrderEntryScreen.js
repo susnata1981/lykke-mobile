@@ -232,40 +232,42 @@ export default class OrderEntryScreen extends Component {
     });
 
     return (
-      <KeyboardAvoidingView style={{ flex: 1 }}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }}>
         <ScrollView>
         <Toolbar backButtonTitle="Routes"
             title="Order Entry"
             backButtonTitle="Details"
             dispatch={this.props.navigation.dispatch} />
-          <View style={{ flex: 1}}>
+          <View style={{ flex: 1, marginTop: 12}}>
             <ListView dataSource={this.ds.cloneWithRows(inventoryItems)}
               renderHeader={() =>
                 <View style={[cs.row, { margin: defaultMargin }]}>
-                  <Text style={styles.header}>
+                  <Text style={[styles.header, {flex:2}]}>
                     Name
                       </Text>
-                  <Text style={styles.header}>
+                      <Text style={[styles.header, {flex:1}]}>
                     Remaining
                       </Text>
-                  <Text style={styles.header}>
+                      <Text style={[styles.header, {flex:1}]}>
                     Order
                       </Text>
                 </View>
               }
 
-              renderRow={item =>
+              renderRow={(item, sectionId, rowId, highlightRow)  =>
                 <OrderItem
+                  key={item.name}
                   item={item}
+                  index={rowId}
                   updateOrder={this.updateOrder}
                   remainingQuantity={item.quantity}
                   quantity={this.state.currentOrder.items[item.name] || '0'} />}
               enableEmptySections={true} />
 
-            <View style={{margin: defaultMargin, marginTop: 24, borderTopColor: '#bbb', borderTopWidth: 1}}>
-              <Text style={{ alignSelf: 'flex-end', fontSize: 20 }}>Gross: {formatCurrency(this.state.currentOrder.gross)} </Text>
-              <Text style={{alignSelf: 'flex-end', fontSize: 20}}>Tax: {formatCurrency(this.calculateTax(this.state.currentOrder.gross))} </Text>
-              <Text style={{ alignSelf: 'flex-end', fontSize: 20 }}>Total: {formatCurrency(this.state.currentOrder.total)} </Text>
+            <View style={{margin: defaultMargin, marginTop: 24, marginBottom: 84, borderTopColor: '#bbb', borderTopWidth: 1}}>
+              <Text style={{ alignSelf: 'flex-end', fontSize: 22, padding: 2 }}>Gross: {formatCurrency(this.state.currentOrder.gross)} </Text>
+              <Text style={{alignSelf: 'flex-end', fontSize: 22, padding: 2}}>Tax: {formatCurrency(this.calculateTax(this.state.currentOrder.gross))} </Text>
+              <Text style={{ alignSelf: 'flex-end', fontSize: 22, padding: 2 }}>Total: {formatCurrency(this.state.currentOrder.total)} </Text>
           </View>
           </View>
         </ScrollView>
@@ -296,7 +298,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     marginRight: defaultMargin,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
     padding: 4,
   }
 });

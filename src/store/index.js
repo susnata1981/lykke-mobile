@@ -19,6 +19,7 @@ const INITIAL_STATE = {
     email: undefined,
     createdAt: undefined,
   },
+  session: {},
   refresh: {},
 }
 

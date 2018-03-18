@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import { StyleProvider, getTheme } from 'native-base';
-import cs, { secondaryTextColor, defaultMargin, primaryColor, primaryColorDark, primaryColorLight, solidTextColor, whiteTextColor, accentColor } from './styles';
+import cs, { fabButtonMargin, secondaryTextColor, defaultMargin, primaryColor, primaryColorDark, primaryColorLight, solidTextColor, whiteTextColor, accentColor } from './styles';
 import Toolbar from './Toolbar';
 import {
   Button,
@@ -157,34 +157,40 @@ export default class BusinessDetailsScreen extends Component {
             </TouchableHighlight>
           </View>
 
-          <View style={cs.row}>
-            <Text style={[cs.rowItem, cs.h4, { flex: 1, color: secondaryTextColor }]}>Outstanding Balance</Text>
-            <Text style={[cs.rowItem, cs.h3, { flex: 2 }]}>{formatCurrency(_.get(this.business, 'outstandingBalance', 0))}</Text>
+          <View style={{ marginLeft: 4 }}>
+            <View style={cs.row}>
+              <Text style={[cs.rowItem, cs.h4, { flex: 1, color: secondaryTextColor }]}>Outstanding Balance</Text>
+              <Text style={[cs.rowItem, cs.h3, { flex: 2 }]}>{formatCurrency(_.get(this.business, 'outstandingBalance', 0))}</Text>
+            </View>
+
+            <Text style={[cs.h4, {color: secondaryTextColor }]}>Past checkins</Text>
+            {checkins.length === 0 && <Text style={cs.h3}>You have not checked into this store before</Text>}
+
+            {checkins.length > 0 && <ListView
+              style={[cs.container, { padding: 12 }]}
+              dataSource={this.ds.cloneWithRows(checkins)}
+              renderRow={item => {
+                return (
+                  <TouchableHighlight onPress={() => this.showDetails(item)}>
+                    <View style={[cs.row, { flex: 1, justifyContent: 'space-around', marginBottom: 8, padding: 8 }]}>
+                      <Text style={[styles.col, { flex: 1 }]}>{moment(item.timeCreated).format('DD/MM/YYYY')}</Text>
+                      <Text style={[styles.col, { flex: 1 }]}>{formatCurrency(_.get(item, 'order.total', 0))}</Text>
+                      <Text style={[styles.col, { flex: 1 }]}>{formatCurrency(_.get(item, 'payment.amount', 0))}</Text>
+                    </View>
+                  </TouchableHighlight>
+                )
+              }}
+
+              renderHeader={() => (
+                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <Text style={[styles.headerCol, { flex: 1 }]}>Date</Text>
+                  <Text style={[styles.headerCol, { flex: 1 }]}>Order</Text>
+                  <Text style={[styles.headerCol, { flex: 1 }]}>Payment</Text>
+                </View>
+              )}
+            />
+            }
           </View>
-
-          <ListView
-            style={[cs.container, { padding: 12 }]}
-            dataSource={this.ds.cloneWithRows(checkins)}
-            renderRow={item => {
-              return (
-                <TouchableHighlight onPress={() => this.showDetails(item)}>
-                  <View style={[cs.row, { flex: 1, justifyContent: 'space-around', marginBottom: 8, padding: 8 }]}>
-                    <Text style={[styles.col, { flex: 1 }]}>{moment(item.timeCreated).format('DD/MM/YYYY')}</Text>
-                    <Text style={[styles.col, { flex: 1 }]}>{formatCurrency(_.get(item, 'order.total', 0))}</Text>
-                    <Text style={[styles.col, { flex: 1 }]}>{formatCurrency(_.get(item, 'payment.amount', 0))}</Text>
-                  </View>
-                </TouchableHighlight>
-              )
-            }}
-
-            renderHeader={() => (
-              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
-                <Text style={[styles.headerCol, { flex: 1 }]}>Date</Text>
-                <Text style={[styles.headerCol, { flex: 1 }]}>Order</Text>
-                <Text style={[styles.headerCol, { flex: 1 }]}>Payment</Text>
-              </View>
-            )}
-          />
         </ScrollView>
         <Button onPress={() => this.next()} style={styles.submitButton}>
           <Text>Next</Text>
@@ -227,7 +233,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    margin: defaultMargin,
+    margin: fabButtonMargin,
     backgroundColor: accentColor,
   },
   mapIcon: {

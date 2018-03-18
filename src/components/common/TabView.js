@@ -6,6 +6,7 @@ import {
   Easing,
   TouchableNativeFeedback,
   ViewPagerAndroid,
+  ScrollView,
 } from 'react-native';
 import _ from 'lodash';
 import { accentColor } from '../styles';
@@ -14,7 +15,7 @@ class TabItem extends Component {
   render() {
     const borderWidth = this.props.selected ? 4 : 0
     return (
-      <View style={[styles.tabItem, {borderBottomWidth: borderWidth}]}>
+      <View style={[styles.tabItem, { borderBottomWidth: borderWidth }]}>
         <TouchableNativeFeedback
           onPress={this.props.handleClick}
           background={TouchableNativeFeedback.SelectableBackground()}>
@@ -51,25 +52,36 @@ export default class TabView extends Component {
 
   render() {
     const TabView = this.tabViews[this.state.tabIndex];
-    console.log('rendering view ' + this.state.tabIndex);
-    console.log(this.tabViews);
+
+    const content = this.props.tabs.map((item, index) => {
+      let Component = item.component;
+      return (
+        <View>
+          <Component key={index} {...item.args} style={{ flex: 1 }} />
+        </View>
+      )
+    });
 
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{flex: 1}}>
         <View style={styles.row}>
           {this.props.tabs.map((tab, i) =>
             <TabItem key={i} title={tab.title} handleClick={() => this.handleClick(i)} selected={this.state.tabIndex === i} />)}
         </View>
+
         <ViewPagerAndroid style={{flex: 1}} ref={elem => this.pager = elem}>
-          {this.props.tabs.map((item, index) => {
-            let Component = item.component;
-            console.log('rendering component ' + JSON.stringify(item.args));
-            return (
-              <Component key={index} {...item.args} />
-          )
-        })}
+          {
+            this.props.tabs.map((item, index) => {
+              let Component = item.component;
+              return (
+                <View key={index}>
+                  <Component key={index} {...item.args} />
+                </View>
+              )
+            })
+          }
         </ViewPagerAndroid>
-      </View>
+      </View >
     )
   }
 }
@@ -87,7 +99,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#0ff',
   },
   tabHeader: {
-    fontSize: 18, 
+    fontSize: 18,
     fontWeight: 'bold',
   }
 });

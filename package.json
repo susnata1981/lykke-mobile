@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "jest"
+    "test": "jest",
+    "dev": "ENVFILE=.env.dev react-native run-android",
+    "prod": "ENVFILE=.env.prod react-native run-android"
   },
   "dependencies": {
     "@expo/vector-icons": "^6.2.2",
@@ -15,6 +17,7 @@
     "prop-types": "^15.6.0",
     "react": "16.2.0",
     "react-native": "0.52.0",
+    "react-native-config": "^0.11.5",
     "react-native-fbsdk": "^0.7.0",
     "react-native-maps": "^0.19.0",
     "react-native-material-ui": "^1.19.0",

@@ -1,13 +1,29 @@
 import React, { Component } from 'react';
-import { Animated, StyleSheet, View, ToolbarAndroid, ScrollView, Linking, Platform } from 'react-native';
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  View,
+  ToolbarAndroid,
+  ScrollView,
+  Linking,
+  Platform,
+  PanResponder,
+  TouchableNativeFeedback,
+  ListView,
+  Alert
+} from 'react-native';
+
 import { Container, Header, Content, H1, Text, Icon, Button, Title, List, ListItem, StyleProvider, getTheme } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 import Toolbar from './Toolbar';
-import cs, { accentColor, primaryColorDark, secondaryColor, defaultMargin } from './styles';
+import cs, { accentColor, primaryColorDark, secondaryColor, defaultMargin, leftMargin } from './styles';
 import MapView, { Marker, LatLng } from 'react-native-maps';
 import { getDateObject, isToday } from '../util';
 import TabView from './common/TabView';
 import { CHECKIN_STATUS, mapStatus } from '../model/status';
+import { mapIndexToDay, getCurrentDay } from '../common/constants'
+import moment from 'moment';
 
 export default class RouteDetailsScreen extends Component {
 
@@ -21,9 +37,31 @@ export default class RouteDetailsScreen extends Component {
     this.next = this.next.bind(this);
     this.back = this.back.bind(this);
     this.openMap = this.openMap.bind(this);
-    this.routeName = this.props.selectedRoute;
-    this.route = this.props.routes[this.routeName];
+    this.routeName = _.get(this.props.navigation.state.params, 'routeName', undefined) || this.props.selectedRoute;
     this.mapHeight = new Animated.Value(340);
+    this.translateY = new Animated.Value(0);
+    this.translationY = new Animated.Value(0);
+    this.containerTranslationY = this.translationY.interpolate({
+      inputRange: [-400, -200, 0, 150, 300],
+      outputRange: [-200, -200, 0, 150, 150]
+    });
+
+    this.panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: (evt, gestureState) => true,
+      onPanResponderGrant: (evt, gestureState) => {
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        Animated.event([
+          null, {
+            dy: this.translationY
+          }
+        ])(evt, gestureState);
+      },
+      onPanResponderRelease: () => {
+        this.translationY.flattenOffset();
+      }
+    });
+    this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -37,10 +75,36 @@ export default class RouteDetailsScreen extends Component {
   }
 
   componentDidMount() {
+    this.props._getBusinesses();
     this.props._getCheckins(this.props.user.key);
+    this.props._getSession(this.props.user);
   }
 
   next(name) {
+    const route = this.props.routes[this.routeName];
+    const currDay = getCurrentDay();
+
+    if (currDay.name !== route.assignment.dayOfWeek) {
+      const route = this.props.routes[this.routeName];
+      const currDay = getCurrentDay();
+
+      Alert.alert(
+        `You cannot start route for ${route.assignment.dayOfWeek}!`,
+        `You can only checkin to businesses on ${currDay.name}'s route`,
+        [
+          {
+            text: 'OK', onPress: () => {
+              this.props.navigation.dispatch(NavigationActions.navigate(
+                { routeName: 'Routes' }
+              ));
+            }
+          },
+        ],
+        { cancelable: false }
+      )
+      return;
+    }
+
     this.props.navigation.dispatch(NavigationActions.navigate(
       { routeName: 'BusinessDetails', params: { businessName: name } }
     ));
@@ -81,7 +145,7 @@ export default class RouteDetailsScreen extends Component {
       });
       return mapStatus(filteredCheckins[0].status);
     }
-    return CHECKIN_STATUS.NA;
+    return CHECKIN_STATUS.NOT_STARTED;
   }
 
   toggleMap = () => {
@@ -95,181 +159,23 @@ export default class RouteDetailsScreen extends Component {
     });
   }
 
-  getStatusColor = (status) => {
-    switch (status) {
-      case CHECKIN_STATUS.COMPLETE:
-        return '#388E3C';
-      case CHECKIN_STATUS.INCOMPLETE:
-        return '#FF9800';
-      default:
-        return '#F44336';
-    }
-  }
-
-  //   render() {
-  //     const mapHeight = this.mapHeight
-
-  //     let businesses = Object.keys(this.state.businesses).map(item => {
-  //       return this.state.businesses[item]
-  //     });
-
-  //     let notStartedCount = 0;
-  //     let incompleteCount = 0;
-  //     let completedCount = 0;
-  //     statusToBusinessMap = {};
-
-  //     businesses.forEach(item => {
-  //       let status = this.getCheckinStatus(item.name);
-  //       statusToBusinessMap[status] = statusToBusinessMap[status] || [];
-  //       statusToBusinessMap[status].push(item);
-
-  //       switch (status) {
-  //         case 'COMPLETE':
-  //           completedCount += 1;
-  //           break;
-  //         case 'INCOMPLETE':
-  //           incompleteCount += 1;
-  //           break;
-  //         default:
-  //           notStartedCount += 1;
-  //       }
-  //     });
-
-  //     _.map(statusToBusinessMap, (v, k) => {
-  //       if (v.length === 0) {
-  //         delete statusToBusinessMap[k];
-  //       }
-  //     });
-
-  //     statusBusinessArray = [];
-  //     _.map(statusToBusinessMap, (v, k) => {
-  //       statusBusinessArray.push({
-  //         divider: true,
-  //         key: k
-  //       });
-  //       v.forEach(i => statusBusinessArray.push(i));
-  //     });
-  //     console.log(statusBusinessArray);
-
-  //     return (
-  //       <ScrollView class={styles.container}>
-  //         <Toolbar backButtonTitle="Routes"
-  //           title={this.routeName}
-  //           dispatch={this.props.navigation.dispatch} />
-
-  //         <Animated.View style={[styles.mapContainer, { height: mapHeight }]}>
-  //           <MapView
-  //             initialRegion={{
-  //               latitude: 22.534599691801127,
-  //               longitude: 88.36452757939696,
-  //               latitudeDelta: 0.12508503188433195,
-  //               longitudeDelta: 0.13547468930481443,
-  //             }}
-  //             onRegionChange={this.onRegionChange}
-  //             style={styles.map}>
-  //             {businesses.map(item => (
-  //               <Marker
-  //                 key={item.name}
-  //                 coordinate={{ latitude: item.lat, longitude: item.lng }}
-  //                 title={item.name}
-  //                 description={item.address}
-  //               />
-  //             ))}
-  //           </MapView>
-  //         </Animated.View>
-  //         <Button small bordered onPress={this.toggleMap} style={{ alignSelf: 'flex-end', padding: 0, margin: 0 }}>
-  //           <Text>Toggle Map</Text>
-  //         </Button>
-
-  //         {(incompleteCount + notStartedCount > 0) &&
-  //           <View style={styles.statusRow}>
-  //             <View style={{ flex: 1, marginLeft: 6 }}>
-  //               <Text style={styles.statusHeader}>Completed</Text>
-  //               <Text style={styles.statusValue}>{completedCount}</Text>
-  //             </View>
-  //             <View style={{ flex: 1, marginLeft: 6 }}>
-  //               <Text style={styles.statusHeader}>Incomplete</Text>
-  //               <Text style={styles.statusValue}>{incompleteCount}</Text>
-  //             </View>
-  //             <View style={{ flex: 1, marginLeft: 6 }}>
-  //               <Text style={styles.statusHeader}>Not Started</Text>
-  //               <Text style={styles.statusValue}>{notStartedCount}</Text>
-  //             </View>
-  //           </View>
-  //         }
-
-  //         {(incompleteCount + notStartedCount === 0) &&
-  //           <View style={{ flex: 1, marginLeft: 6 }}>
-  //             <Text style={styles.statusHeader}>Great! You've completed all checkins for the day.</Text>
-  //           </View>
-  //         }
-
-  //         <View>
-  //          <TabView tabs={[
-  //           {title:'Tab A', component: createComponent('Component A', '#0ff')}, 
-  //           {title:'Tab B', component: createComponent('Component B', '#f0f')}, 
-  //           {title:'Tab C', component: createComponent('Component C', '#ff0')}]} />    
-  //         </View>
-
-  //         <List dataArray={statusBusinessArray}
-  //           renderRow={(item) => {
-  //             if (item.divider) {
-  //               return (
-  //                 <ListItem itemDivider style={{ backgroundColor: this.getStatusColor(item.key) }}>
-  //                   <Text style={{ color: '#fff', fontSize: 18 }}>{item.key}</Text>
-  //                 </ListItem>
-  //               )
-  //             }
-  //             return (
-  //               <ListItem onPress={() => this.showBusinessDetails(item.name)}
-  //                 style={styles.itemRow}
-  //                 onPress={() => this.next(item.name)}>
-  //                 <View style={styles.item}>
-  //                   <StyleProvider style={getTheme({ iconFamily: "MaterialCommunityIcons" })}>
-  //                     <View style={{ flexDirection: 'row' }}>
-  //                       <Icon name="google-maps" onPress={() => this.openMap(item.lat, item.lng)} style={styles.mapIcon} />
-  //                     </View>
-  //                   </StyleProvider>
-  //                   <Text style={cs.h4}>
-  //                     {item.name}
-  //                   </Text>
-  //                 </View>
-  //                 <View style={styles.item}>
-  //                   <Text style={cs.h4}>
-  //                     {this.getCheckinStatus(item.name)}
-  //                   </Text>
-  //                 </View>
-  //               </ListItem>)
-  //           }}>
-  //         </List>
-  //       </ScrollView>
-  //     );
-  //   }
-  // }
-
-  getTitle = (title, count) => {
+  getTabTitle = (title, count) => {
     return `${title}(${count})`;
   }
 
-  render() {
-    const mapHeight = this.mapHeight
+  modifyRoute = () => {
+    this.props.navigation.dispatch(NavigationActions.navigate({
+      routeName: 'ModifyRoute', params: {
+        routeName: this.routeName
+      }
+    }));
+  }
 
-    let businesses = Object.keys(this.state.businesses).map(item => {
-      return this.state.businesses[item]
-    });
-
-    let notStartedCount = 0;
-    let incompleteCount = 0;
-    let completedCount = 0;
-    statusToBusinessMap = {};
-
-    _.map(CHECKIN_STATUS, (v, k) => {
-      statusToBusinessMap[v] = statusToBusinessMap[v] || [];
-    });
+  getStatusCount = (businesses) => {
+    let completedCount = 0, incompleteCount = 0, notStartedCount = 0;
 
     businesses.forEach(item => {
       let status = this.getCheckinStatus(item.name);
-      statusToBusinessMap[status].push(item);
 
       switch (status) {
         case CHECKIN_STATUS.COMPLETE:
@@ -282,18 +188,75 @@ export default class RouteDetailsScreen extends Component {
           notStartedCount += 1;
       }
     });
-    console.log('busienss map');
-    console.log(businesses);
-    console.log(statusToBusinessMap);
-    console.log(statusToBusinessMap[CHECKIN_STATUS.NOT_STARTED]);
+
+    return {
+      completedCount,
+      incompleteCount,
+      notStartedCount
+    }
+  }
+
+  getCheckinsSinceYesterday = () => {
+    _.filter(this.props.checkins, (v, k) => {
+      let date = moment(v.timeCreated).valueOf();
+      let yesterday = moment(v.timeCreated).subtract(1, 'days').valueOf();
+      let today = moment().valueOf();
+      return (date > yesterday && date < today) && v.status === 'INCOMPLETE';
+    });
+  }
+
+  getAllBusinesses = () => {
+    let businesses = [];
+    const route = this.props.routes[this.routeName];
+
+    _.map(route.businesses, (v, k) => {
+      businesses.push(this.state.businesses[k]);
+    });
+
+    const userAddedBusinesses = _.get(this.props.session, 'route.businesses', {});
+    _.forEach(userAddedBusinesses, (v, k) => {
+      businesses.push(this.state.businesses[k]);
+    });
+    return businesses;
+  }
+
+  createStatusToBusinessMap = (businesses) => {
+    let statusToBusinessMap = {};
+    _.map(CHECKIN_STATUS, (v, k) => {
+      statusToBusinessMap[v] = statusToBusinessMap[v] || [];
+    });
+
+    businesses.forEach(item => {
+      let status = this.getCheckinStatus(item.name);
+      statusToBusinessMap[status].push(item);
+    });
+
+    return statusToBusinessMap;
+  }
+
+  render() {
+    if (_.isEmpty(this.state.businesses) || _.isEmpty(this.state.checkins)) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={cs.h3}>Loading...</Text>
+        </View>
+      )
+    }
+
+    const mapHeight = this.mapHeight;
+    let businesses = this.getAllBusinesses();
+
+    const statusToBusinessMap = this.createStatusToBusinessMap(businesses);
+    const newCheckins = this.getCheckinsSinceYesterday();
+    let { completedCount, incompleteCount, notStartedCount } = this.getStatusCount(businesses);
 
     return (
-      <ScrollView class={styles.container}>
+      <View style={cs.container}>
         <Toolbar backButtonTitle="Routes"
           title={this.routeName}
           dispatch={this.props.navigation.dispatch} />
 
-        <Animated.View style={[styles.mapContainer, { height: mapHeight }]}>
+        <View style={[styles.mapContainer, { height: Dimensions.get('window').height }]}>
           <MapView
             initialRegion={{
               latitude: 22.534599691801127,
@@ -312,27 +275,7 @@ export default class RouteDetailsScreen extends Component {
               />
             ))}
           </MapView>
-        </Animated.View>
-        <Button small bordered onPress={this.toggleMap} style={{ alignSelf: 'flex-end', padding: 0, margin: 0 }}>
-          <Text>Toggle Map</Text>
-        </Button>
-
-        {/* {(incompleteCount + notStartedCount > 0) &&
-          <View style={styles.statusRow}>
-            <View style={{ flex: 1, marginLeft: 6 }}>
-              <Text style={styles.statusHeader}>Completed</Text>
-              <Text style={styles.statusValue}>{completedCount}</Text>
-            </View>
-            <View style={{ flex: 1, marginLeft: 6 }}>
-              <Text style={styles.statusHeader}>Incomplete</Text>
-              <Text style={styles.statusValue}>{incompleteCount}</Text>
-            </View>
-            <View style={{ flex: 1, marginLeft: 6 }}>
-              <Text style={styles.statusHeader}>Not Started</Text>
-              <Text style={styles.statusValue}>{notStartedCount}</Text>
-            </View>
-          </View>
-        } */}
+        </View>
 
         {(incompleteCount + notStartedCount === 0) &&
           <View style={{ flex: 1, marginLeft: 6 }}>
@@ -340,58 +283,69 @@ export default class RouteDetailsScreen extends Component {
           </View>
         }
 
-        <View style={{ backgroundColor: '#fff' }}>
-          <TabView tabs={[
+        <Animated.View
+          style={{
+            flex: 1, position: 'absolute', left: 0, right: 0, top: 300, backgroundColor: '#fff',
+            transform: [{ translateY: this.containerTranslationY }], minHeight: 560, paddingTop: 16, elevation: 10,
+          }}
+          {...this.panResponder.panHandlers}>
+          <TabView style={{ flex: 1, backgroundColor: '#fff', }} tabs={[
             {
-              title: this.getTitle(CHECKIN_STATUS.COMPLETE, completedCount),
+              title: this.getTabTitle(CHECKIN_STATUS.COMPLETE, completedCount),
               component: this.createRouteListComponent(),
               args: {
                 businesses: statusToBusinessMap[CHECKIN_STATUS.COMPLETE],
-                showBusinessDetails: this.showBusinessDetails,
                 openMap: this.openMap,
                 next: this.next
               }
             },
             {
-              title: this.getTitle(CHECKIN_STATUS.INCOMPLETE, incompleteCount),
+              title: this.getTabTitle(CHECKIN_STATUS.INCOMPLETE, incompleteCount),
               component: this.createRouteListComponent(),
               args: {
                 businesses: statusToBusinessMap[CHECKIN_STATUS.INCOMPLETE],
-                showBusinessDetails: this.showBusinessDetails,
                 openMap: this.openMap,
                 next: this.next
               }
             },
             {
-              title: this.getTitle(CHECKIN_STATUS.NOT_STARTED, notStartedCount),
+              title: this.getTabTitle(CHECKIN_STATUS.NOT_STARTED, notStartedCount),
               component: this.createRouteListComponent(),
               args: {
                 businesses: statusToBusinessMap[CHECKIN_STATUS.NOT_STARTED],
-                showBusinessDetails: this.showBusinessDetails,
                 openMap: this.openMap,
                 next: this.next
               }
             }
           ]}
           />
-        </View>
-      </ScrollView>
+        </Animated.View>
+
+        <Button onPress={this.modifyRoute} style={{
+          elevation: 100, position: 'absolute', bottom: 0, right: 0,
+          margin: leftMargin, backgroundColor: accentColor
+        }}>
+          <Text>Modify Route</Text>
+        </Button>
+      </View>
     );
   }
 
   createRouteListComponent = () => {
-    return ({ businesses, showBusinessDetails, next, openMap }) => {
+    return ({ businesses, next, openMap }) => {
       let hasData = businesses.length > 0;
       if (hasData) {
         return (
-          <List
-            dataArray={businesses}
-            renderRow={(item) => {
+          <ListView
+            dataSource={this.ds.cloneWithRows(businesses)}
+            renderRow={(item, sectionId, rowId) => {
+              const bgColor = rowId % 2 === 0 ? '#fff' : '#f2f2f2';
+
               return (
-                <ListItem onPress={() => showBusinessDetails(item.name)}
+                <TouchableNativeFeedback
                   style={styles.itemRow}
                   onPress={() => next(item.name)}>
-                  <View style={styles.item}>
+                  <View style={[styles.item, { backgroundColor: bgColor }]}>
                     <StyleProvider style={getTheme({ iconFamily: "MaterialCommunityIcons" })}>
                       <View style={{ flexDirection: 'row' }}>
                         <Icon name="google-maps" onPress={() => openMap(item.lat, item.lng)} style={styles.mapIcon} />
@@ -401,9 +355,9 @@ export default class RouteDetailsScreen extends Component {
                       {item.name}
                     </Text>
                   </View>
-                </ListItem>)
+                </TouchableNativeFeedback>)
             }}>
-          </List>
+          </ListView>
         )
       } else {
         return (
@@ -420,7 +374,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'flex-start',
+    backgroundColor: 'red',
   },
   mapContainer: {
     top: 0,
@@ -440,8 +394,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    padding: 4,
+    padding: 8,
     marginLeft: defaultMargin,
+    alignItems: 'center',
   },
   mapIcon: {
     fontSize: 32,

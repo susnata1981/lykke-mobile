@@ -5,6 +5,8 @@ import RouteListContainer from '../components/containers/RouteListContainer';
 import LoginContainer from '../components/containers/LoginContainer'
 import StatsContainer from '../components/containers/StatsContainer';
 import RouteDetailsContainer from '../components/containers/RouteDetailsContainer';
+import MoidfyRouteContainer from '../components/containers/ModifyRouteContainer';
+import RouteStartContainer from '../components/containers/RouteStartContainer';
 import BusinessDetailsContainer from '../components/containers/BusinessDetailsContainer';
 import OrderEntryContainer from '../components/containers/OrderEntryContainer';
 import OrderConfirmContainer from '../components/containers/OrderConfirmContainer';
@@ -18,21 +20,6 @@ import {
   primaryColor
 } from '../components/styles';
 
-// const RouteTab = TabNavigator({
-//   completed: {
-//     screen: RouteDetailsContainer,
-//   },
-//   incomplete: {
-//     screen: RouteDetailsContainer,
-//   },
-//   notStarted: {
-//     screen: RouteDetailsContainer,
-//   },
-// }, {
-//   animationEnabled: true,
-//   tabBarPosition: 'bottom',
-// });
-
 const DrawerStack = StackNavigator({
   Routes: {
     screen: RouteListContainer,
@@ -40,10 +27,22 @@ const DrawerStack = StackNavigator({
       title: 'Route List',
     }
   },
+  RouteStart: {
+    screen: RouteStartContainer,
+    navigationOptions: {
+      title: 'Start',
+    }
+  },
   RouteDetails: {
     screen: RouteDetailsContainer,
     navigationOptions: {
       title: 'Route Details',
+    }
+  },
+  ModifyRoute: {
+    screen: MoidfyRouteContainer,
+    navigationOptions: {
+      title: 'Modify Route',
     }
   },
   BusinessDetails: {
@@ -85,7 +84,7 @@ const DrawerStack = StackNavigator({
 },
   {
     headerMode: 'none',
-    initialRouteName: 'Routes',
+    initialRouteName: 'RouteStart',
   }
 );
 

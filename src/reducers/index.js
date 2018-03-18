@@ -1,5 +1,6 @@
 import * as Types from '../actions/types';
 import { combineReducers } from 'redux';
+import _ from 'lodash';
 
 function businesses(state, action) {
   if (!state) {
@@ -22,6 +23,21 @@ function routes(state, action) {
   switch(action.type) {
     case Types.GET_ROUTES_SUCCESS:
       return action.routes;
+    case Types.ADD_BUSINESS:
+      console.log('--add business--');
+      // console.log(state);
+      console.log('--before--');
+      const route = _.cloneDeep(_.filter(state, item => item.name === action.routeName)[0]);
+      console.log(route);
+      route.businesses[`${action.businessName}`] = true;
+      route.assignment = state[action.routeName].assignment;
+      const o = {};
+      o[`${route.name}`] = route;
+      console.log('-new route-');
+      console.log(o);
+      const newRoutes = Object.assign({}, state, o);
+      console.log(newRoutes);
+      return newRoutes;
     default:
       return state;
   }
@@ -111,21 +127,24 @@ function checkins(state, action) {
 
   switch(action.type) {
     case Types.GET_CHECKINS_SUCCESS:
-      // let newCheckins = Object.assign({}, state, action.checkins);
       return action.checkins;
-    // case Types.RETRIEVED_CHECKIN_SUCCESS:
-    //   const newCheckin = action.checkin;
-    //   let existingCheckins = Object.keys(state).filter(item => item.key === newCheckin.key);
-    //   if (existingCheckins.length > 0) {
-    //     console.log('Checking data exists!');
-    //     return action.checkin;
-    //   }
-    //   return Object.assign({}, state, newCheckin);
-    // case Types.CHECKIN_COMPLETE: 
-    //   let selected = Object.assign({}, state.selected, {'status': action.status});
-    //   return Object.assign({}, state, { selected: selected });
     case Types.CREATE_CHECKIN_SUCCESS:
     case Types.CHECKIN_UPDATE_SUCCESS:
+    default:
+      return state;
+  }
+}
+
+function session(state, action) {
+  if (!state) {
+    return null;
+  }
+
+  switch(action.type) {
+    case Types.ADD_BUSINESS_TO_ROUTE:
+      return Object.assign({}, state, {route: { businesses: action.businesses }});
+    case Types.GET_SESSION_SUCCESS:
+      return action.session;
     default:
       return state;
   }
@@ -141,6 +160,7 @@ function getRootReducer(navReducer) {
     checkins: checkins,
     selectedCheckinKey: selectedCheckinKey,
     navigationState: navReducer,
+    session: session,
     refresh: refresh,
   });
 }

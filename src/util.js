@@ -1,3 +1,13 @@
+export const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+export const getDay = (index) => {
+  return DAYS[index];
+}
+
+export const indexOfDay = (day) => {
+  return DAYS[day];
+}
+
 export function isInteger(value) {
   return !isNaN(value) &&
     parseInt(Number(value)) === value &&

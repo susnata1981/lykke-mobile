@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text } from 'react-native';
-import { fetchBuisnessList, logout, createCheckin, getCheckins } from '../../actions/index';
+import { fetchBuisnessList, logout, createCheckin, getCheckins, getBusinesses, getSession } from '../../actions/index';
 import RouteDetailsScreen from '../RouteDetailsScreen';
 import { connect } from 'react-redux';
 
@@ -21,13 +21,16 @@ function mapStateToProps(state, ownProps) {
     routes: state.routes,
     checkins: state.checkins,
     selectedRoute: state.selectedRoute,
+    session: state.session,
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
+    _getBusinesses: () => dispatch(getBusinesses()),
     _getCheckins: (userKey) => dispatch(getCheckins(userKey)),
     _createCheckin: (businessKey, userKey, timeCreated) => dispatch(createCheckin(businessKey, userKey, timeCreated)),
+    _getSession: (user) => dispatch(getSession(user)),
   }
 }
 

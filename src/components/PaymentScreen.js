@@ -7,6 +7,7 @@ import { isFloat, isInteger, formatCurrency } from '../util';
 import Toolbar from './Toolbar';
 import { CHECKIN_COMPLETE, CHECKIN_INCOMPLETE } from '../common/constants';
 import { isNumber } from '../util'
+import _ from 'lodash';
 
 export default class PaymentScreen extends Component {
 
@@ -113,7 +114,7 @@ export default class PaymentScreen extends Component {
 
   render() {
     return (
-      <KeyboardAvoidingView style={{flex:1}}>
+      <KeyboardAvoidingView style={{flex:1, backgroundColor: '#fff'}}>
         <View>
           <Toolbar 
             backButtonTitle="Order"
@@ -122,7 +123,7 @@ export default class PaymentScreen extends Component {
 
           <View style={cs.row}>
             <Text style={{flex:1, fontSize: 18, margin: 6, marginLeft: 12, color: secondaryTextColor}}>Outstanding Balance</Text>
-            <Text style={{flex:1, fontSize: 20, margin: 6, marginLeft: 12}}>{formatCurrency(this.business.outstandingBalance)}</Text>
+            <Text style={{flex:1, fontSize: 20, margin: 6, marginLeft: 12}}>{formatCurrency(_.get(this.business, 'outstandingBalance', 0))}</Text>
           </View>
 
           <View style={cs.row}>
@@ -136,7 +137,7 @@ export default class PaymentScreen extends Component {
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: defaultMargin, marginTop: 36}}>
-            <Text style={{flex: 1, fontSize: 18}}>Enter Payment Amount</Text>
+            <Text style={{fontSize: 20, marginLeft: 12, flex:1.5}}>Enter Payment Amount</Text>
             <TextInput
               ref={ref => this.paymentInput = ref}
               onChangeText={(amount) => {

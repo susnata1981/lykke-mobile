@@ -9,28 +9,39 @@ import {
 import { NavigationActions } from 'react-navigation';
 import * as Types from '../actions/types';
 import { primaryColor } from './styles';
+import store from '../store'
+import { logout } from '../actions';
 
 const ROUTE_ITEMS = [
   {
     id: 1,
-    title: 'Routes',
+    title: 'Today\'s Route',
+    icon: 'home',
+    onPress: (dispatch) => dispatch(NavigationActions.navigate({ routeName: 'RouteStart' }))
+  }, {
+    id: 2,
+    title: 'All Routes',
     icon: 'home',
     onPress: (dispatch) => dispatch(NavigationActions.navigate({ routeName: 'Routes' }))
   }, {
-    id: 2,
+    id: 3,
     title: 'Stats',
     icon: 'md-stats',
     onPress: (dispatch) => dispatch(NavigationActions.navigate(
       { routeName: 'Stats' }
     ))
   }, {
-    id: 3,
+    id: 4,
     title: 'Logout',
     icon: 'md-log-out',
     onPress: (dispatch) => {
-      dispatch({
-        type: Types.SIGN_OUT,
-      });
+      // dispatch({
+      //   type: Types.SIGN_OUT,
+      // });
+      const state = store.getState();
+      console.log('-logout-');
+      console.log(state)
+      dispatch(logout(state.user));
       // TODO: Check if we need to reset it here.
       const resetAction = NavigationActions.reset({
         index: 0,

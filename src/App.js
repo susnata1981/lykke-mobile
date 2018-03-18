@@ -8,13 +8,6 @@ import PropTypes from 'prop-types';
 import * as Types from './actions/types';
 import { Root } from "native-base";
 
-
-// const navReducer = (state, action) => {
-//   let newState = AppNavigator.router.getStateForAction(action, state);
-//   return newState || state;
-// }
-
-
 class AppWithNavigationState extends Component {
   componentWillMount = () => {
     if (Platform.OS !== 'android') return;
@@ -57,10 +50,10 @@ AppWithNavigationState.propTypes = {
 mapStateToProps = (state) => ({
   nav: state.navigationState,
 })
-const AppWithState = connect(mapStateToProps)(AppWithNavigationState);
-// export const store = configureStore(navReducer);
 
+const AppWithState = connect(mapStateToProps)(AppWithNavigationState);
 console.disableYellowBox = true;
+
 
 export default class App extends Component {
   render() {

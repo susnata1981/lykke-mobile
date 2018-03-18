@@ -3,8 +3,10 @@ import { View, Container, Content, Header, List, ListItem, Text, Icon, Button, H
 import PropTypes from 'prop-types';
 import { NavigationActions } from 'react-navigation';
 import { ToolbarAndroid, StyleSheet, ListView } from 'react-native';
-import cs from './styles';
+import cs, { primaryColorLight, leftMargin, primaryTextColor } from './styles';
 import Toolbar from './Toolbar';
+import { mapIndexToDay } from '../common/constants';
+import moment from 'moment';
 
 export default class RouteListScreen extends Component {
 
@@ -53,7 +55,6 @@ export default class RouteListScreen extends Component {
   }
 
   render() {
-    console.log(this.props.routes);
     const routeNames = Object.keys(this.props.routes).map(key => {
       return {
         name: key,
@@ -62,8 +63,11 @@ export default class RouteListScreen extends Component {
       }
     });
 
+    const today = mapIndexToDay(moment().day()).name;
+    console.log('-today =' + today);
+
     return (
-      <View style={cs.container}>
+      <View style={[cs.container, {backgroundColor: '#fff'}]}>
         <Toolbar backButtonTitle="Routes"
           title="Your Routes"
           onBackButtonPress={() => this.onNavigationBackButtonPress()}
@@ -86,23 +90,26 @@ export default class RouteListScreen extends Component {
             </List>
           </View>
 
-          <List dataArray={routeNames}
-            renderRow={(item) =>
+          {routeNames.length === 0 && <Text style={[cs.error, {margin: cs.defaultMargin/2}]}>No routes are created for you.</Text>}
+
+          {routeNames.length > 0 && <List dataArray={routeNames}
+            renderRow={(item) => {
+              const bgColor = today === item.dayOfWeek.toUpperCase() ? primaryColorLight : '#fff';
+              const textColor = today === item.dayOfWeek.toUpperCase() ? '#fff' : primaryTextColor;
+              return (
               <ListItem onPress={() => this.showRouteDetails(item.name)}
-                style={styles.routesContainer}>
-                <View style={[styles.item1]}>
-                  <Text style={[cs.h4, { flex: 1, textAlign: 'center' }]}>
+                style={[styles.routesContainer, {backgroundColor: bgColor}]}>
+                  <Text style={[cs.h4, { flex: 1, textAlign: 'center', marginLeft: leftMargin,  color:textColor }]}>
                     {item.dayOfWeek.toUpperCase()}
                   </Text>
-                </View>
-                <View style={[styles.item2, { textAlign: 'center' }]}>
-                  <Text style={[cs.h4, { flex: 1, textAlign: 'center' }]}>
+                  <Text style={[cs.h4, { flex: 1, textAlign: 'center', color:textColor }]}>
                     {item.name} ({item.businessCount})
               </Text>
-                </View>
               </ListItem>
-            }>
+              )
+            }}>
           </List>
+          }
         </View>
       </View>
     );
@@ -112,7 +119,7 @@ export default class RouteListScreen extends Component {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#ddd',
+    backgroundColor: '#bbb',
     padding: 4,
   },
   routesContainer: {
@@ -127,7 +134,7 @@ const styles = StyleSheet.create({
   },
   item2: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
 })
 

@@ -1,26 +1,31 @@
 import * as firebase from 'firebase';
+import config from 'react-native-config';
 
 // PROD SETTINGS
-// var config = {
-//   apiKey: "AIzaSyCerTXhFJVrxLwU6BXjkuG2v4iK88EXE4U",
-//   authDomain: "lykke-1e98b.firebaseapp.com",
-//   databaseURL: "https://lykke-1e98b.firebaseio.com",
-//   projectId: "lykke-1e98b",
-//   storageBucket: "lykke-1e98b.appspot.com",
-//   messagingSenderId: "91650177123"
-// };
-// firebase.initializeApp(config);
+var dbConfig = {
+  apiKey: config.API_KEY,
+  authDomain: config.AUTH_DOMAIN,
+  databaseURL: config.DATABASE_URL,
+  projectId: config.PROJECT_ID,
+  storageBucket: config.STORAGE_BUCKET,
+  messagingSenderId: config.MESSAGE_SENDER_ID,
+};
+
+// console.log('-initializing firebase-');
+// console.log(config.ENVIRONMENT);
+// console.log(config.FIREBASE_CONFIG);
+firebase.initializeApp(dbConfig);
 
 // TEST SETTINGS
-var config = {
-  apiKey: "AIzaSyDVzOwEC6eCNFCMdHp-ONk_kj8WeBJtNvk",
-  authDomain: "lykke-test.firebaseapp.com",
-  databaseURL: "https://lykke-test.firebaseio.com",
-  projectId: "lykke-test",
-  storageBucket: "lykke-test.appspot.com",
-  messagingSenderId: "784972485626"
-};
-firebase.initializeApp(config);
+// var config = {
+//   apiKey: "AIzaSyDVzOwEC6eCNFCMdHp-ONk_kj8WeBJtNvk",
+//   authDomain: "lykke-test.firebaseapp.com",
+//   databaseURL: "https://lykke-test.firebaseio.com",
+//   projectId: "lykke-test",
+//   storageBucket: "lykke-test.appspot.com",
+//   messagingSenderId: "784972485626"
+// };
+// firebase.initializeApp(config);
 
 testDatabase = () => {
   try {

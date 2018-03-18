@@ -47,20 +47,22 @@ export default class OrderItem extends Component {
   }
 
   render() {
+    const bgColor = this.props.index % 2 === 0? '#fff' : '#f2f2f2';
+    
     return (
-      <View style={cs.row}>
-        <Text style={[cs.rowItem, cs.h3, cs.contentCenter]}>
+      <View style={[cs.row, {backgroundColor: bgColor}]}>
+        <Text style={[cs.rowItem, cs.h3, cs.contentCenter, {flex:2}]}>
           {this.props.item.name}
           <Text style={cs.h5}> @ {formatCurrency(this.props.item.price)}</Text>
         </Text>
 
-        <Text style={[cs.rowItem, cs.h3, cs.contentCenter]}>
+        <Text style={[cs.rowItem, cs.h3, cs.contentCenter, {flex:1}]}>
           {this.props.remainingQuantity}
         </Text>
 
         <TextInput
           ref={elem => (this.quantityInput = elem)}
-          style={[cs.rowItem, cs.h1, cs.contentCenter]}
+          style={[cs.rowItem, cs.h1, cs.contentCenter, {flex:1}]}
           keyboardType="numeric"
           placeholder='quantity'
           defaultValue={this.props.quantity ? this.props.quantity.toString() : '0'}

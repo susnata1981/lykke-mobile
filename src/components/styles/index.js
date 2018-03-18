@@ -6,6 +6,7 @@ export const primaryColorLight = '#d05ce3';
 export const accentColor = '#388E3C';
 export const secondaryColor = '#4CAF50';
 export const primaryTextColor = '#333';
+export const errorTextColor = '#cc0000';
 export const secondaryTextColor = '#575757';
 export const whiteTextColor = '#fff';
 export const solidTextColor = whiteTextColor;
@@ -13,7 +14,9 @@ export const toolbarNavButtonColor = primaryTextColor;
 export const toolbarTitleColor = '#fff';
 export const toolbarTitleFontSize = 24;
 export const toolbarHeight = 56;
-export const defaultMargin = 12;
+export const defaultMargin = 4;
+export const leftMargin = 12;
+export const fabButtonMargin = 12;
 
 
 const styles = StyleSheet.create({
@@ -75,6 +78,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: primaryTextColor,
   },
+  error: {
+    fontSize: 20,
+    color: errorTextColor,
+  },
   underline: {
     textDecorationLine: 'underline',
   },
@@ -90,6 +97,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: primaryColor,
+    margin: leftMargin,
   },
   primaryBtn: {
     backgroundColor: primaryColorDark,
