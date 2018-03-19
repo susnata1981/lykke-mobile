@@ -18,9 +18,6 @@ export default class LoginScreen extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.user.email) {
-      // const resetAction = NavigationActions.navigate({
-      //   routeName: 'DrawerStack'
-      // });
       const resetAction = NavigationActions.reset({
         index: 0,
         key: null,

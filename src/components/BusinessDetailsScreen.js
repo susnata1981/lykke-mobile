@@ -149,7 +149,7 @@ export default class BusinessDetailsScreen extends Component {
             dispatch={this.props.navigation.dispatch} />
 
           <View style={[cs.row, { justifyContent: 'center', alignItems: 'center', marginTop: defaultMargin }]}>
-            <Text style={[{ color: accentColor }, cs.h1]}>{this.business.name}</Text>
+            <Text style={[{ color: accentColor }, cs.h1]}>{this.props.navigation.state.params.businessName}</Text>
             <TouchableHighlight onPress={() => this.openMap(this.business.lat, this.business.lng)}>
               <StyleProvider style={getTheme({ iconFamily: "MaterialCommunityIcons" })}>
                 <Icon name="google-maps" onPress={() => this.openMap(this.business.lat, this.business.lng)} style={styles.mapIcon} />

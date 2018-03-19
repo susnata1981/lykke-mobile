@@ -63,6 +63,8 @@ export default class ModifyRouteScreen extends Component {
     const businessesNotInRoute = allBusinesses.filter(item => businessesInRoute.indexOf(item) === -1);
     const businessesInSession = [];
 
+    console.log('-render-');
+    console.log(this.props.session);
     _.map(_.get(this.props.session, 'route.businesses', []), (v, k) => {
       businessesInSession.push(k);
     });
@@ -74,7 +76,7 @@ export default class ModifyRouteScreen extends Component {
           dispatch={this.props.navigation.dispatch} />
 
         <TextInput 
-          ref={el => this.searchInput = el } 
+          ref={ el => this.searchInput = el }
           style={{ margin: leftMargin }} 
           placeholder='Search business...' 
           onChangeText={input => this.onSearchInputChange(input)}

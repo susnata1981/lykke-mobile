@@ -28,7 +28,7 @@ export default class CheckoutScreen extends Component {
     this.props._completeCheckin(this.props.selectedCheckinKey);
     Alert.alert(
       'Nice job!',
-      `You finished checkin into ${this.business.name}.`,
+      `You finished checkin into ${this.props.navigation.state.params.businessName}.`,
       [
         {text: 'Finish', onPress: () => this.finish()},
       ],
@@ -76,7 +76,9 @@ export default class CheckoutScreen extends Component {
           dispatch={this.props.navigation.dispatch} />
 
         <ScrollView>
-          <Text style={[cs.h2, cs.underline, { margin: leftMargin, marginBottom: 2*defaultMargin, fontSize: 24 }]}>{this.business.name}</Text>
+          <Text style={[cs.h2, cs.underline, { margin: leftMargin, marginBottom: 2*defaultMargin, fontSize: 24}]}>
+            {this.props.navigation.state.params.businessName}
+          </Text>
           <View style={styles.group}>
             <Text style={[cs.h4, { flex:1, color: secondaryTextColor}]}>Checkin time</Text>
             <Text style={[cs.h4, { flex:1, color: primaryTextColor}]}>

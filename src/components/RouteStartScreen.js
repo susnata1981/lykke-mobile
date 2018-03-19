@@ -19,12 +19,12 @@ import _ from 'lodash';
 
 export default class RouteStartScreen extends Component {
 
-  componentDidMount() {
-    this.props._getRoutes(this.props.user);
-  }
+  // componentDidMount() {
+  //   this.props._getRoutes(this.props.user);
+  // }
 
   next = () => {
-    this.props._selectRoute(this.route.name);
+    this.props._selectRoute(Object.keys(this.route)[0]);
     this.props.navigation.dispatch(NavigationActions.navigate(
       { routeName: 'RouteDetails' }
     ));
@@ -47,12 +47,13 @@ export default class RouteStartScreen extends Component {
     
     const dayToRouteMap = {};
     _.map(this.props.routes, (v, k) => {
-      dayToRouteMap[v.assignment.dayOfWeek] = v
+      dayToRouteMap[v.assignment.dayOfWeek] = {[k] : v}
     });
 
     this.route = dayToRouteMap[currDay.name]
     const businesses = [];
-    _.map(_.get(this.route, 'businesses', []), (v, k) => {
+    const routeValue = this.route[Object.keys(this.route)[0]];
+    _.map(_.get(routeValue, 'businesses', []), (v, k) => {
       if (v) {
         businesses.push(k);
       }

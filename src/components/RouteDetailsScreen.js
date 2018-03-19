@@ -74,12 +74,6 @@ export default class RouteDetailsScreen extends Component {
     }
   }
 
-  componentDidMount() {
-    this.props._getBusinesses();
-    this.props._getCheckins(this.props.user.key);
-    this.props._getSession(this.props.user);
-  }
-
   next(name) {
     const route = this.props.routes[this.routeName];
     const currDay = getCurrentDay();
@@ -175,7 +169,7 @@ export default class RouteDetailsScreen extends Component {
     let completedCount = 0, incompleteCount = 0, notStartedCount = 0;
 
     businesses.forEach(item => {
-      let status = this.getCheckinStatus(item.name);
+      let status = this.getCheckinStatus(item.key);
 
       switch (status) {
         case CHECKIN_STATUS.COMPLETE:
@@ -210,12 +204,13 @@ export default class RouteDetailsScreen extends Component {
     const route = this.props.routes[this.routeName];
 
     _.map(route.businesses, (v, k) => {
-      businesses.push(this.state.businesses[k]);
+      businesses.push(_.extend(this.state.businesses[k], { key: k }));
     });
 
     const userAddedBusinesses = _.get(this.props.session, 'route.businesses', {});
     _.forEach(userAddedBusinesses, (v, k) => {
-      businesses.push(this.state.businesses[k]);
+      // businesses.push(this.state.businesses[k]);
+      businesses.push(_.extend(this.state.businesses[k], { key: k }));
     });
     return businesses;
   }
@@ -227,7 +222,7 @@ export default class RouteDetailsScreen extends Component {
     });
 
     businesses.forEach(item => {
-      let status = this.getCheckinStatus(item.name);
+      let status = this.getCheckinStatus(item.key);
       statusToBusinessMap[status].push(item);
     });
 
@@ -268,9 +263,9 @@ export default class RouteDetailsScreen extends Component {
             style={styles.map}>
             {businesses.map(item => (
               <Marker
-                key={item.name}
+                key={item.key}
                 coordinate={{ latitude: item.lat, longitude: item.lng }}
-                title={item.name}
+                title={item.key}
                 description={item.address}
               />
             ))}
@@ -344,7 +339,7 @@ export default class RouteDetailsScreen extends Component {
               return (
                 <TouchableNativeFeedback
                   style={styles.itemRow}
-                  onPress={() => next(item.name)}>
+                  onPress={() => next(item.key)}>
                   <View style={[styles.item, { backgroundColor: bgColor }]}>
                     <StyleProvider style={getTheme({ iconFamily: "MaterialCommunityIcons" })}>
                       <View style={{ flexDirection: 'row' }}>
@@ -352,7 +347,7 @@ export default class RouteDetailsScreen extends Component {
                       </View>
                     </StyleProvider>
                     <Text style={cs.h3}>
-                      {item.name}
+                      {item.key}
                     </Text>
                   </View>
                 </TouchableNativeFeedback>)

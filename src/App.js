@@ -7,6 +7,7 @@ import { AppNavigator } from './config/Routes'
 import PropTypes from 'prop-types';
 import * as Types from './actions/types';
 import { Root } from "native-base";
+import { setupListeners } from './actions/listeners'
 
 class AppWithNavigationState extends Component {
   componentWillMount = () => {
@@ -54,6 +55,7 @@ mapStateToProps = (state) => ({
 const AppWithState = connect(mapStateToProps)(AppWithNavigationState);
 console.disableYellowBox = true;
 
+setupListeners();
 
 export default class App extends Component {
   render() {

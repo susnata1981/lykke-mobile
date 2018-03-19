@@ -15,11 +15,6 @@ export default class RouteListScreen extends Component {
     this.handleMenuClick = this.handleMenuClick.bind(this);
   }
 
-  componentDidMount() {
-    this.props._getRoutes(this.props.user);
-    this.props._getBusinesses();
-  }
-
   componentWillReceiveProps(nextProps) {
     if (!nextProps.user.email) {
       const resetAction = NavigationActions.reset({

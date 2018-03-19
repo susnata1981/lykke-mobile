@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text } from 'react-native';
 import PropTypes from 'prop-types';
-import { confirmOrder, getItemMaster, checkin, saveOrder } from '../../actions/index';
+import { confirmOrder, checkin, saveOrder } from '../../actions/index';
 import OrderEntryScreen from '../OrderEntryScreen';
 import { connect } from 'react-redux';
 
@@ -27,7 +27,6 @@ function mapStateToProps(state, ownProps) {
 function mapDispatchToProps(dispatch) {
   return {
     _confirmOrder: (order) => dispatch(confirmOrder(order)),
-    _getItemMaster: () => dispatch(getItemMaster()),
     _saveOrder: (checkinKey, order, updatedItemCounts) => dispatch(saveOrder(checkinKey, order, updatedItemCounts)),
   }
 }

@@ -92,7 +92,6 @@ export default class OrderEntryScreen extends Component {
         { cancelable: true }
       )
     }
-    this.props._getItemMaster();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -188,7 +187,7 @@ export default class OrderEntryScreen extends Component {
 
     this.props.navigation.dispatch(NavigationActions.navigate({
       routeName: 'Payment',
-      params: { businessName: this.business.name }
+      params: { businessName: this.props.navigation.state.params.businessName }
     }));
   }
 

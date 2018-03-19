@@ -2,57 +2,57 @@ import firebase from '../firebase';
 import * as Types from '../actions/types'
 import FBSDK, { AccessToken, LoginManager } from 'react-native-fbsdk';
 import store from '../store';
-import { isInteger, isFloat, isNumber } from '../util'
+import { isInteger, isFloat, isNumber, isSameDay } from '../util'
 import { CHECKIN_COMPLETE, CHECKIN_INCOMPLETE } from '../common/constants';
 
-refreshStore = () => {
+export const refreshStore = () => {
   return {
     type: Types.REFRESH
   }
 }
 
-getBusinessesSuccess = (businesses) => {
+export const getBusinessesSuccess = (businesses) => {
   return {
     type: Types.GET_BUSINESSES,
     businesses
   }
 }
 
-getRoutesSuccess = (routes) => {
+export const getRoutesSuccess = (routes) => {
   return {
     type: Types.GET_ROUTES_SUCCESS,
     routes
   }
 }
 
-getInventorySuccess = (itemmaster) => {
+export const getInventorySuccess = (itemmaster) => {
   return {
     type: Types.GET_ITEMMASTER_SUCCESS,
     itemmaster: itemmaster
   }
 }
 
-loginSuccess = (user) => {
+export const loginSuccess = (user) => {
   return {
     type: Types.LOGIN_SUCCESS,
     user,
   }
 }
 
-loginFailure = (user) => {
+export const loginFailure = (user) => {
   return {
     type: Types.LOGIN_FAILURE,
     user,
   }
 }
 
-signOut = () => {
+export const signOut = () => {
   return {
     type: Types.SIGN_OUT,
   }
 }
 
-selectRouteSuccess = (routeName) => {
+export const selectRouteSuccess = (routeName) => {
   return {
     type: Types.SELECT_ROUTE_SUCCESS,
     name: routeName
@@ -60,83 +60,57 @@ selectRouteSuccess = (routeName) => {
 }
 
 
-createCheckinSuccess = (checkin) => {
+export const createCheckinSuccess = (checkin) => {
   return {
     type: Types.CREATE_CHECKIN_SUCCESS,
     checkin: checkin,
   }
 }
 
-retrievedCheckinSuccess = (checkin) => {
+export const retrievedCheckinSuccess = (checkin) => {
   return {
     type: Types.RETRIEVED_CHECKIN_SUCCESS,
     checkin: checkin,
   }
 }
 
-currentCheckinInfo = (key) => {
+export const currentCheckinInfo = (key) => {
   return {
     type: Types.CURRENT_CHECKIN_INFO,
     checkinKey: key,
   }
 }
 
-checkingUpdateSuccess = (checkin) => {
+export const checkingUpdateSuccess = (checkin) => {
   return {
     type: Types.CHECKIN_UPDATE_SUCCESS,
     checkin: checkin,
   }
 }
 
-getCheckinsSuccess = (checkins) => {
+export const getCheckinsSuccess = (checkins) => {
   return {
     type: Types.GET_CHECKINS_SUCCESS,
     checkins
   }
 }
 
-export const getBusinesses = () => {
-  return (dispatch) => {
-    firebase.database().ref('businesses').once('value', function (snapshot) {
-      let result = {};
 
-      snapshot.forEach(function (item) {
-        result[item.key] = {
-          name: item.key,
-          address: item.val().address,
-          outstandingBalance: item.val().outstanding_balance,
-          lat: item.val().lat,
-          lng: item.val().lng,
-          time_created: item.val().time_created,
-        }
-      });
-      dispatch(getBusinessesSuccess(result));
-    });
+export const selectRoute = (routeName) => {
+  return (dispatch) => {
+    dispatch(selectRouteSuccess(routeName));
   }
 }
 
-export const getRoutes = (user) => {
-  return (dispatch) => {
-    const routes = {};
-    let routesPromise = firebase.database().ref('routes').once('value', function (snapshot) {
-      snapshot.forEach(function (item) {
-        if (item.val().assignment
-          && item.val().assignment.assignee
-          && item.val().assignment.assignee === user.key) {
-          routes[item.key] = {
-            name: item.key,
-            businesses: item.val().businesses,
-            assignment: item.val().assignment,
-            time_created: item.val().time_created,
-          }
-        }
-      });
-      dispatch(getRoutesSuccess(routes));
-    });
+export const completeCheckinSuccess = status => {
+  return {
+    type: Types.CHECKIN_COMPLETE,
+    status: status,
   }
 }
 
-const addBusinessToRouteSuccess = (routeName, businessName) => {
+
+export const addBusinessToRouteSuccess = (routeName, businessName) => {
   return {
     type: Types.ADD_BUSINESS,
     routeName: routeName,
@@ -144,10 +118,39 @@ const addBusinessToRouteSuccess = (routeName, businessName) => {
   }
 }
 
-const updateRouteInSession = (businesses) => {
+export const updateRouteInSession = (businesses) => {
   return {
     type: Types.ADD_BUSINESS_TO_ROUTE,
     businesses,
+  }
+}
+
+
+export const isLogin = (isLogin) => {
+  return {
+    type: Types.IS_LOGIN,
+    isLogin
+  };
+}
+
+export const login = () => {
+  return (dispatch) => {
+    dispatch(isLogin(true));
+    _facebook_login();
+  }
+}
+
+export const getSessionSuccess = (session) => {
+  return {
+    type: Types.GET_SESSION_SUCCESS,
+    session
+  }
+}
+
+export const refresh = () => {
+  return (dispatch) => {
+    console.log('YYY dispatching refreshStore!');
+    dispatch(refreshStore());
   }
 }
 
@@ -172,16 +175,14 @@ export const addBusinessToRoute = (user, businessName) => {
                 }
               }
             });
-            dispatch(updateRouteInSession({ businesses: [businessName] }));
+            // dispatch(updateRouteInSession({ businesses: [businessName] }));
           } else {
             const newBusinesses = _.cloneDeep(item.val().route.businesses);
             newBusinesses[`${businessName}`] = true;
-            console.log('adding new business');
-            console.log(newBusinesses);
             firebase.database().ref('sessions/' + item.key + '/route').update({
               businesses: newBusinesses
             });
-            dispatch(updateRouteInSession(newBusinesses));
+            // dispatch(updateRouteInSession(newBusinesses));
             return;
           }
         }
@@ -225,59 +226,6 @@ export const removeBusinessFromRoute = (user, businessName) => {
   }
 }
 
-export const getItemMaster = () => {
-  return (dispatch) => {
-    const inventory = {};
-    firebase.database().ref('itemmaster').on('value', function (snapshot) {
-      snapshot.forEach(function (item) {
-        inventory[item.key] = {
-          id: item.val().id,
-          name: item.key,
-          quantity: item.val().quantity,
-          price: item.val().price,
-          timeCreated: item.val().time_created,
-        }
-      });
-      dispatch(getInventorySuccess(inventory));
-    });
-  }
-}
-
-export const selectRoute = (routeName) => {
-  return (dispatch) => {
-    dispatch(selectRouteSuccess(routeName));
-  }
-}
-
-export const getCheckins = (userKey) => {
-  return (dispatch) => {
-    firebase.database().ref('checkins').orderByChild('timeCreated').on('value', snapshot => {
-      const checkins = {};
-      snapshot.forEach(item => {
-        let checkin = {};
-        if (item.val().userKey === userKey) {
-          checkin['key'] = item.key;
-          checkin['userKey'] = item.val().userKey;
-          checkin['businessKey'] = item.val().businessKey;
-          checkin['order'] = item.val().order;
-          checkin['payment'] = item.val().payment;
-          checkin['status'] = item.val().status;
-          checkin['timeCreated'] = item.val().timeCreated;
-          checkin['timeCompleted'] = item.val().timeCompleted;
-          checkins[item.key] = checkin;
-        }
-      });
-      dispatch(getCheckinsSuccess(checkins));
-    });
-  }
-}
-
-function isSameDay(d1, d2) {
-  return d1.getDate() === d2.getDate()
-    && d1.getMonth() === d2.getMonth()
-    && d1.getFullYear() === d2.getFullYear();
-}
-
 export const createCheckin = (businessKey, userKey, timeCreated) => {
   return (dispatch) => {
     firebase.database().ref('checkins')
@@ -290,7 +238,6 @@ export const createCheckin = (businessKey, userKey, timeCreated) => {
             && item.val().businessKey === businessKey
             && item.val().userKey === userKey) {
 
-            console.log('XXX FOUND EXISTING CHECKING ' + JSON.stringify(item.val()));
             let checkinData = {};
             checkinData[item.key] = {
               'businessKey': item.val().businessKey,
@@ -324,13 +271,6 @@ export const createCheckin = (businessKey, userKey, timeCreated) => {
   }
 }
 
-function completeCheckinSuccess(status) {
-  return {
-    type: Types.CHECKIN_COMPLETE,
-    status: status,
-  }
-}
-
 export const completeCheckin = (checkinKey) => {
   return (dispatch) => {
     if (!checkinKey) {
@@ -344,7 +284,6 @@ export const completeCheckin = (checkinKey) => {
     }
     firebase.database().ref('checkins/' + checkinKey).update(updates);
     dispatch(completeCheckinSuccess(CHECKIN_COMPLETE));
-    // dispatch(createCheckinSuccess());
   }
 }
 
@@ -357,7 +296,6 @@ export const saveOrder = (checkinKey, order, itemmaster) => {
       return;
     }
 
-    console.log(`saving order ${JSON.stringify(order)} ${JSON.stringify(itemmaster)}`);
     const checkinRef = firebase.database().ref('checkins/' + checkinKey);
 
     checkinRef.transaction(function (checkin) {
@@ -374,12 +312,6 @@ export const saveOrder = (checkinKey, order, itemmaster) => {
       }
       return checkin;
     });
-
-    // .update({
-    //   'order': order
-    // });
-
-    // dispatch(checkingUpdateSuccess())
   }
 }
 
@@ -393,7 +325,6 @@ export const updatePayment = (checkinKey, amount) => {
     firebase.database().ref('checkins/' + checkinKey + '/payment').update({
       'amount': amount
     });
-    // dispatch(checkingUpdateSuccess())
   }
 }
 
@@ -405,93 +336,6 @@ validOrder = (order) => {
   });
 
   return true;
-}
-
-confirmOrder = (order) => {
-  console.log('TODO: Confirm order');
-}
-
-export const isLogin = (isLogin) => {
-  return {
-    type: Types.IS_LOGIN,
-    isLogin
-  };
-}
-
-export const login = () => {
-  return (dispatch) => {
-
-    dispatch(isLogin(true));
-    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-
-      console.log('***** onAuthStateChanged ******');
-      console.log(user.email);
-      if (user) {
-        firebase.database().ref('users').once('value', snapshot => {
-          console.log('firebase returned results for users');
-          let found = false;
-          snapshot.forEach(item => {
-            if (item.val().email === user.email) {
-              found = true;
-              console.log('-found user -');
-              console.log(item.val());  
-              createSession(user.email, () => {
-                dispatch(loginSuccess({
-                  key: item.key,
-                  isLogin: false,
-                  firstname: item.val().firstname,
-                  lastname: item.val().lastname,
-                  email: item.val().email,
-                  createdAt: item.val().createdAt,
-                }));
-              });
-              unsubscribe();
-              return;
-            }
-          });
-
-          if (!found) {
-            dispatch(loginFailure({
-              email: undefined,
-              createdAt: undefined,
-              firstname: undefined,
-              lastname: undefined,
-              createdAt: undefined
-            }));
-          }
-        });
-      }
-      unsubscribe();
-    });
-    _facebook_login();
-  }
-}
-
-const getSessionSuccess = (session) => {
-  return {
-    type: Types.GET_SESSION_SUCCESS,
-    session
-  }
-}
-
-export const getSession = (user) => {
-  return dispatch => {
-    console.log('get session called');
-    firebase.database().ref('sessions').on('value', snapshot => {
-      if (!snapshot.exists()) {
-        throw new Error('Session does not exist');
-      }
-
-      snapshot.forEach(item => {
-        if (item.val().email === user.email && item.val().isLoggedIn) {
-          console.log('found user');
-          console.log(item.val());
-          dispatch(getSessionSuccess(item.val()));
-          return;
-        }
-      });
-    });
-  }
 }
 
 const createSession = (email, callback) => {
@@ -550,13 +394,6 @@ export const logout = (user) => {
         console.error(`Error signing out ${JSON.stringify(err)}`);
       });
     });
-  }
-}
-
-export const refresh = () => {
-  return (dispatch) => {
-    console.log('YYY dispatching refreshStore!');
-    dispatch(refreshStore());
   }
 }
 
